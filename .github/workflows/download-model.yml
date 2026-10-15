@@ -1,0 +1,34 @@
+
+name: Download AnimateDiff Model
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Download model
+        run: |
+          mkdir -p model
+          curl -fL --retry 3 \
+            "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/motion_module/mm_sd15_v3.safetensors" \
+            -o model/mm_sd15_v3.safetensors
+
+          SIZE=$(stat -c%s model/mm_sd15_v3.safetensors)
+          echo "Downloaded $SIZE bytes"
+
+          if [ "$SIZE" -lt 500000000 ]; then
+            echo "ERROR: Downloaded file is too small"
+            exit 1
+          fi
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: animatediff-v3-model
+          path: model/mm_sd15_v3.safetensors
+          retention-days: 1
+          compression-level: 0
